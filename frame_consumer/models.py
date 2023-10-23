@@ -20,7 +20,9 @@ class ProcessExecutable(models.Model):
     executable_name = models.CharField(max_length=128, unique=True)
     # full path to executable.
     executable_path = models.CharField(max_length=512)
-    executable_category = models.ForeignKey(ProcessCategory, on_delete=models.SET_NULL)
+    executable_category = models.ForeignKey(
+        ProcessCategory, on_delete=models.SET_NULL, null=True
+    )
 
     def __str__(self):
         return f"{self.executable_name} | {self.executable_category}"

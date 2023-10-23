@@ -4,7 +4,6 @@ from .serializer import ProcessCategorySerializer
 from rest_framework.permissions import AllowAny
 
 
-
 class ProcessCategoryListCreateAPI(ListCreateAPIView):
     queryset = ProcessCategory.objects.all()
     serializer_class = ProcessCategorySerializer
