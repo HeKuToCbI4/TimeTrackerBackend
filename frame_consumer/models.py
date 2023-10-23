@@ -8,6 +8,9 @@ class ProcessCategory(models.Model):
     # Category name (games | office | programming | work etc.
     category_name = models.CharField(max_length=128, unique=True)
 
+    def __str__(self):
+        return f"{self.category_name}"
+
 
 class ProcessExecutable(models.Model):
     # id | executable name | category | path to executable
@@ -19,14 +22,20 @@ class ProcessExecutable(models.Model):
     executable_path = models.CharField(max_length=512)
     executable_category = models.ForeignKey(ProcessCategory, on_delete=models.SET_NULL)
 
+    def __str__(self):
+        return f"{self.executable_name} | {self.executable_category}"
+
 
 class ProcessWindow(models.Model):
     # executable id | name | utc since | utc to
     id = models.BigAutoField(primary_key=True)
     process_window_title = models.CharField(max_length=512, unique=True)
     executable = models.ForeignKey(ProcessExecutable, on_delete=models.CASCADE)
-    utc_since = models.DateTimeField()
+    utc_from = models.DateTimeField()
     utc_to = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.process_window_title} | {self.executable} | {self.utc_from} - {self.utc_to}"
 
 
 class KnownHost(models.Model):
@@ -36,3 +45,14 @@ class KnownHost(models.Model):
     host = models.CharField(max_length=64)
     port = models.PositiveSmallIntegerField()
     is_monitored = models.BooleanField()
+    status = models.CharField(max_length=128)
+
+    class Meta(object):
+        constraints = [
+            models.UniqueConstraint(
+                fields=["host", "port"], name="Host|Port unique check."
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.host}:{self.port} | state: {self.is_monitored}"
