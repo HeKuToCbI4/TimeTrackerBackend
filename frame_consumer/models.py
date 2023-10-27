@@ -24,6 +24,14 @@ class ProcessExecutable(models.Model):
         ProcessCategory, on_delete=models.SET_NULL, null=True
     )
 
+    class Meta(object):
+        constraints = [
+            models.UniqueConstraint(
+                fields=["executable_name", "executable_path"],
+                name="Host|Port unique check.",
+            )
+        ]
+
     def __str__(self):
         return f"{self.executable_name} | {self.executable_category}"
 
@@ -41,7 +49,7 @@ class ProcessWindow(models.Model):
 
 
 class KnownHost(models.Model):
-    # host
+    # remote_host
     # port
     # actively_monitored
     host = models.CharField(max_length=64)
@@ -52,7 +60,7 @@ class KnownHost(models.Model):
     class Meta(object):
         constraints = [
             models.UniqueConstraint(
-                fields=["host", "port"], name="Host|Port unique check."
+                fields=["remote_host", "port"], name="Host|Port unique check."
             )
         ]
 
