@@ -28,7 +28,7 @@ class ProcessExecutable(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["executable_name", "executable_path"],
-                name="Host|Port unique check.",
+                name="executable name|path unique check.",
             )
         ]
 
@@ -60,7 +60,7 @@ class KnownHost(models.Model):
     class Meta(object):
         constraints = [
             models.UniqueConstraint(
-                fields=["remote_host", "port"], name="Host|Port unique check."
+                fields=["host", "port"], name="Host|Port unique check."
             )
         ]
 

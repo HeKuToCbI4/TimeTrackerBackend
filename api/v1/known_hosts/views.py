@@ -4,7 +4,6 @@ from .serializer import KnownHostSerializer
 from rest_framework.permissions import AllowAny
 
 
-
 class KnownHostsListCreateAPI(ListCreateAPIView):
     queryset = KnownHost.objects.all()
     serializer_class = KnownHostSerializer
