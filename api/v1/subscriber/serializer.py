@@ -8,12 +8,3 @@ class SubscriptionSerializer(serializers.Serializer):
 
     class Meta:
         fields = "__all__"
-
-
-class UnsubscriptionSerializer(serializers.Serializer):
-    host = serializers.CharField(max_length=64)
-    port = serializers.IntegerField()
-    consumer_id = serializers.CharField(max_length=256)
-
-    class Meta:
-        fields = "__all__"

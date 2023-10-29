@@ -54,8 +54,8 @@ class KnownHost(models.Model):
     # actively_monitored
     host = models.CharField(max_length=64)
     port = models.PositiveSmallIntegerField()
-    is_monitored = models.BooleanField()
-    status = models.CharField(max_length=128)
+    is_monitored = models.BooleanField(default=False)
+    status = models.CharField(max_length=128, default="Unknown")
 
     class Meta(object):
         constraints = [

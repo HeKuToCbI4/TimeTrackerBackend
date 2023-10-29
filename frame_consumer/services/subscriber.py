@@ -1,22 +1,24 @@
-from frame_consumer.models import KnownHost
-from django.http import response
-from modules.rpc_client import RPCClientService
 from typing import Dict
+
+from django.http import response
+
+from frame_consumer.models import KnownHost
+from modules.rpc_client import RPCClientService
 
 
 class SubscriberService:
     # TODO: REWRITE LOGIC BEHIND CONSUMER ID. MAP SHOULD USE HOST-PORT REPRESENTATION! NOT THIS SHIT!
     instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         if cls.instance is None:
-            cls.instance = cls.__new__(SubscriberService, args, kwargs)
+            cls.instance = super(SubscriberService, cls).__new__(cls)
         return cls.instance
 
     def __init__(self):
         self.client_rpc_client_map: Dict[str, RPCClientService] = {}
 
-    def subscribe(self, host, port, consumer_id):
+    def subscribe(self, host, port, consumer_id) -> response.JsonResponse:
         # This thing should handle thread creation.
         # This thing should also create remote_host host model obj.
         remote_host, created = KnownHost.objects.get_or_create(host=host, port=port)
@@ -37,7 +39,7 @@ class SubscriberService:
                 {"status_code": 500, "message": "Some shit happened!"}
             )
 
-    def unsubscribe(self, host, port, consumer_id):
+    def unsubscribe(self, host, port, consumer_id) -> response.JsonResponse:
         # This thing should handle thread stopping.
         # This thing should also create remote_host host model obj.
         if not KnownHost.objects.filter(host=host, port=port):

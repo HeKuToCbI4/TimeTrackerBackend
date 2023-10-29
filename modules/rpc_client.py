@@ -50,7 +50,7 @@ class RPCClientService(object):
     # TODO: decompose.
     # TODO: add exception handling.
     def _subscription_thread(self):
-        subscribe_request = frame_info_service.StreamSubscribeRequest(self.consumer_id)
+        subscribe_request = frame_info_service.StreamSubscribeRequest(consumer_id=self.consumer_id)
         incoming_frame: frame_info.TimeFrameInfo
         # we need to get data, after that process and save it into db.
         while not self.stop_requested:
