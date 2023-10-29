@@ -11,7 +11,7 @@ from drf_yasg.utils import swagger_auto_schema
 class SubscriberAPI(ViewSet):
     permission_classes = (AllowAny,)
 
-    @action(methods=["post"], detail="Subscribe for frame updates of the host")
+    @action(methods=["post"], detail="Subscribe for frame updates of the remote_host")
     @swagger_auto_schema(request_body=SubscriptionSerializer)
     def subscribe(self, request: Request):
         serializer = SubscriptionSerializer(data=request.data)
@@ -20,7 +20,7 @@ class SubscriberAPI(ViewSet):
         service = SubscriberService()
         return service.subscribe(data["host"], data["port"], data["consumer_id"])
 
-    @action(methods=["post"], detail="Unubscribe for frame updates of the host")
+    @action(methods=["post"], detail="Unubscribe for frame updates of the remote_host")
     @swagger_auto_schema(request_body=SubscriptionSerializer)
     def unsubscribe(self, request: Request):
         serializer = SubscriptionSerializer(data=request.data)

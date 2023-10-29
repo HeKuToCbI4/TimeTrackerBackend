@@ -39,7 +39,7 @@ class ProcessExecutable(models.Model):
 class ProcessWindow(models.Model):
     # executable id | name | utc since | utc to
     id = models.BigAutoField(primary_key=True)
-    process_window_title = models.CharField(max_length=512, unique=True)
+    process_window_title = models.CharField(max_length=512, unique=False)
     executable = models.ForeignKey(ProcessExecutable, on_delete=models.CASCADE)
     utc_from = models.DateTimeField()
     utc_to = models.DateTimeField()
@@ -60,7 +60,7 @@ class KnownHost(models.Model):
     class Meta(object):
         constraints = [
             models.UniqueConstraint(
-                fields=["host", "port"], name="Host|Port unique check."
+                fields=["remote_host", "port"], name="Host|Port unique check."
             )
         ]
 

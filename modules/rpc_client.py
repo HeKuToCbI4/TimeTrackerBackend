@@ -2,13 +2,14 @@ import dataclasses
 import os
 import threading
 import time
+from datetime import datetime
 
 import grpc
-import re
+
 from frame_consumer.models import ProcessWindow, ProcessExecutable, KnownHost
-from proto import FrameInfo_pb2 as frame_info
 from proto import FrameInfoService_pb2 as frame_info_service
 from proto import FrameInfoService_pb2_grpc as frame_info_service_grpc
+from proto import FrameInfo_pb2 as frame_info
 
 
 class RPCClientServiceException(Exception):
@@ -47,13 +48,129 @@ class RPCClientService(object):
             )
         self.service_stub = frame_info_service_grpc.FrameInfoServiceStub(self.channel)
 
-    # TODO: decompose.
+    def _prepare_subscription_request(
+        self, consumer_id: str
+    ) -> frame_info_service.StreamSubscribeRequest:
+        return frame_info_service.StreamSubscribeRequest(consumer_id=self.consumer_id)
+
+    def _update_remote_host_state(self, is_monitored: bool, status=""):
+        # update state to "monitored"
+        self.remote_host.is_monitored = is_monitored
+        self.remote_host.status = status
+        self.remote_host.save()
+
+    def _extract_data_from_frame(self, frame: frame_info.TimeFrameInfo) -> tuple:
+        cur_frame_id = frame.id
+        process_path = frame.process_executable_path
+        current_timestamp = frame.utc_timestamp
+        process_window = frame.window_title
+        if process_path:
+            process_binary = process_path.split(os.sep)[-1]
+            print(f"{process_path=} {process_binary=}")
+        else:
+            print("process path is none!")
+            process_binary = None
+        return (
+            cur_frame_id,
+            process_binary,
+            process_path,
+            process_window,
+            current_timestamp,
+        )
+
+    def _initialize_data_to_write(
+        self, frame: frame_info.TimeFrameInfo
+    ) -> ProcessWindowData:
+        (
+            cur_frame_id,
+            process_binary,
+            process_path,
+            process_window,
+            current_timestamp,
+        ) = self._extract_data_from_frame(frame)
+        return ProcessWindowData(
+            last_frame_id=cur_frame_id,
+            window_title=process_window,
+            utc_from=current_timestamp,
+            process_path=process_path,
+            process_executable=process_binary,
+        )
+
+    def _get_process_executable_object(
+        self, process_executable: str, process_path: str
+    ) -> ProcessExecutable:
+        # Process executable may exist there.
+        (
+            process_executable_object,
+            created,
+        ) = ProcessExecutable.objects.get_or_create(
+            executable_name=process_executable,
+            executable_path=process_path,
+        )
+        if created:
+            print(f"created new process executable entry: {process_executable_object}")
+        print(f"{process_executable_object=}")
+
+    def _write_data_to_db(self, process_data: ProcessWindowData, utc_to: int):
+        process_executable_object = self._get_process_executable_object(
+            process_data.process_executable, process_data.process_path
+        )
+        # Process window we always create from scratch.
+        process_window_object = ProcessWindow.objects.create(
+            process_window_title=process_data.window_title,
+            executable=process_executable_object,
+            utc_from=datetime.utcfromtimestamp(process_data.utc_from / 1000),
+            utc_to=datetime.utcfromtimestamp(utc_to / 1000),
+        )
+        print(f"{process_window_object=}")
+
+    def _process_incoming_frames(self):
+        # Receive and write data?
+        subscribe_request = self._prepare_subscription_request(self.consumer_id)
+        incoming_frame: frame_info.TimeFrameInfo
+        process_info: ProcessExecutable
+        window_info: ProcessWindow
+        data_to_write: ProcessWindowData | None = None
+        for incoming_frame in self.service_stub.Subscribe(subscribe_request):
+            # probably preprocess extracted data. Apply some filters.
+            # TODO: execute self.preprocess data or some DataProcessor.process_data()
+            if data_to_write is None:
+                print(f"Received first frame for host {self.remote_host}")
+                # Construct inital object. Date to is none and will be updated.
+                data_to_write = self._initialize_data_to_write(incoming_frame)
+                continue
+            # Process incoming frame considering previous received.
+            if incoming_frame.id != data_to_write.last_frame_id + 1:
+                print(
+                    f"Sequence error! Prev frame id = {data_to_write.last_frame_id}. Current {incoming_frame.id}."
+                )
+                data_to_write = None
+                continue
+            # Now we have process executable, binary, window and timestamp of snapshot + prev frame data.
+            # If process binary and window titles match -> update data to write,
+            # and continue, else write to db, create new data.
+            # If window was not switched.
+            if (
+                incoming_frame.window_title == data_to_write.window_title
+                and not self.stop_requested.is_set()
+            ):
+                data_to_write.last_frame_id = incoming_frame.id
+                continue
+            # We're in else section. We need to grab data from DB and write it.
+            # Get process object to link against new frame.
+            self._write_data_to_db(data_to_write, incoming_frame.utc_timestamp)
+            # Update data to write for further actions.
+            data_to_write = self._initialize_data_to_write(incoming_frame)
+
+            # Check for exit condition
+            if self.stop_requested.is_set():
+                self._unsubscribe()
+                break
+
     # TODO: add exception handling.
     def _subscription_thread(self):
-        subscribe_request = frame_info_service.StreamSubscribeRequest(consumer_id=self.consumer_id)
-        incoming_frame: frame_info.TimeFrameInfo
         # we need to get data, after that process and save it into db.
-        while not self.stop_requested:
+        while not self.stop_requested.is_set():
             try:
                 # attempt to connect. Some issues may be raised during connection.
                 self.connect()
@@ -68,77 +185,8 @@ class RPCClientService(object):
 
             self.create_stub()
             # update state to "monitored"
-            self.remote_host.is_monitored = True
-            self.remote_host.status = "Success"
-            self.remote_host.save()
-            # Receive and write data?
-            process_info: ProcessExecutable
-            window_info: ProcessWindow
-            data_to_write: ProcessWindowData | None = None
-            for incoming_frame in self.service_stub.Subscribe(subscribe_request):
-                print(data_to_write)
-                # Extract data from frame.
-                cur_frame_id = incoming_frame.id
-                process_path = incoming_frame.process_executable_path
-                current_timestamp = incoming_frame.utc_timestamp
-                process_window = incoming_frame.window_title
-                if process_path:
-                    process_binary = process_path.split(os.sep)[0]
-                else:
-                    process_binary = None
-                # probably preprocess extracted data. Apply some filters.
-                # TODO: execute self.preprocess data or some DataProcessor.process_data()
-                if data_to_write is None:
-                    print(f"Received first frame for host {self.remote_host}")
-                    # Construct inital object. Date to is none and will be updated.
-                    data_to_write = ProcessWindowData(
-                        last_frame_id=cur_frame_id,
-                        window_title=process_window,
-                        utc_from=current_timestamp,
-                        process_path=process_path,
-                        process_executable=process_binary,
-                    )
-                    continue
-                # Process incoming frame considering previous received.
-                if cur_frame_id != data_to_write.last_frame_id + 1:
-                    print(
-                        f"Sequnce error! Prev frame id = {data_to_write.last_frame_id}. Current {id=}."
-                    )
-                    print(f"Clearing data.")
-                    data_to_write = None
-                    continue
-                # Now we have process executable, binary, window and timestamp of snapshot + prev frame data.
-                # If process binary and window titles match -> update data to write,
-                # and continue, else write to db, create new data.
-                # If window was not switched.
-                if process_window == data_to_write.window_title:
-                    continue
-                # We're in else section. We need to grab data from DB and write it.
-                # Process executable may exist there.
-                process_executable_object = ProcessExecutable.objects.get_or_create(
-                    executable_name=data_to_write.process_executable,
-                    executable_path=data_to_write.process_path,
-                )
-                print(f"{process_executable_object=}")
-                # Process window we always create from scratch.
-                process_window_object = ProcessWindow.objects.create(
-                    process_window_title=data_to_write.window_title,
-                    executable=process_executable_object,
-                    utc_from=data_to_write.utc_from,
-                    utc_to=current_timestamp,
-                )
-                print(f"{process_window_object=}")
-                # Update data to write for further actions.
-                data_to_write = ProcessWindowData(
-                    last_frame_id=cur_frame_id,
-                    window_title=process_window,
-                    utc_from=current_timestamp,
-                    process_path=process_path,
-                    process_executable=process_binary,
-                )
-                if self.stop_requested:
-                    self._unsubscribe()
-                    break
+            self._update_remote_host_state(True, "Connection established")
+            self._process_incoming_frames()
 
     def start_monitoring(self) -> bool:
         try:
@@ -147,7 +195,9 @@ class RPCClientService(object):
                 name=f"subscription thread client {self.consumer_id}",
                 daemon=True,
             )
+            print(f"{self} created {self.subscription_thread}")
             self.subscription_thread.start()
+            print(f"{self} started {self.subscription_thread}")
             return True
         except:
             return False
@@ -162,7 +212,13 @@ class RPCClientService(object):
             return False
 
     def _unsubscribe(self):
-        unsubscribe_req = frame_info_service.StreamUnsubscribeRequest(self.consumer_id)
+        unsubscribe_req = frame_info_service.StreamUnsubscribeRequest(
+            consumer_id=self.consumer_id
+        )
         self.service_stub.Unsubscribe(unsubscribe_req)
-        self.remote_host.is_monitored = False
-        self.remote_host.save()
+        self._update_remote_host_state(
+            is_monitored=False, status="Stopped due to unsubscribe request"
+        )
+
+    def __str__(self):
+        return f"{self.remote_host} consumer {self.consumer_id}"
