@@ -164,3 +164,5 @@ class RPCClientService(object):
     def _unsubscribe(self):
         unsubscribe_req = frame_info_service.StreamUnsubscribeRequest(self.consumer_id)
         self.service_stub.Unsubscribe(unsubscribe_req)
+        self.remote_host.is_monitored = False
+        self.remote_host.save()
