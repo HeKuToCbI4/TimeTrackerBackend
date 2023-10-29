@@ -16,7 +16,7 @@ class SubscriberService:
         remote_host, created = KnownHost.objects.get_or_create(host=host, port=port)
         if created:
             print(f"Created a new remote_host instance {remote_host}")
-        if remote_host.is_monitored and self.rpc_pool.is_monitored(remote_host, consumer_id):
+        if remote_host.is_monitored and self.rpc_pool.is_monitored(remote_host):
             return response.JsonResponse(
                 {"status_code": 403, "message": "Host is already monitored"}
             )
