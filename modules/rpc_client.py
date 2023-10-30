@@ -5,12 +5,12 @@ import time
 from datetime import datetime
 
 import grpc
+from django.utils import timezone
 
 from frame_consumer.models import ProcessWindow, ProcessExecutable, KnownHost
 from proto import FrameInfoService_pb2 as frame_info_service
 from proto import FrameInfoService_pb2_grpc as frame_info_service_grpc
 from proto import FrameInfo_pb2 as frame_info
-from django.utils import timezone
 
 
 class RPCClientServiceException(Exception):

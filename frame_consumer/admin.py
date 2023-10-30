@@ -1,10 +1,12 @@
 from django.contrib import admin
+
 from frame_consumer.models import (
     ProcessCategory,
     ProcessExecutable,
     ProcessWindow,
     KnownHost,
 )
+
 
 # Register your models here.
 

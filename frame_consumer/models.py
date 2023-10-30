@@ -56,13 +56,17 @@ class KnownHost(models.Model):
     port = models.PositiveSmallIntegerField()
     is_monitored = models.BooleanField(default=False)
     status = models.CharField(max_length=128, default="Unknown")
+    auto_start_monitor = models.BooleanField(default=False)
 
     class Meta(object):
         constraints = [
             models.UniqueConstraint(
-                fields=["remote_host", "port"], name="Host|Port unique check."
+                fields=["host", "port"], name="Host|Port unique check."
             )
         ]
 
     def __str__(self):
-        return f"{self.host}:{self.port} | state: {self.is_monitored}"
+        return (
+            f"{self.host}:{self.port} | automatic "
+            f"{self.auto_start_monitor} | state: {self.is_monitored} | status {self.status}"
+        )

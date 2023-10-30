@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from frame_consumer.models import ProcessCategory, ProcessExecutable, ProcessWindow, KnownHost
+from frame_consumer.models import ProcessCategory
 
 
 class ProcessCategorySerializer(serializers.ModelSerializer):

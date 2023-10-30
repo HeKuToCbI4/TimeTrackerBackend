@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -5,7 +6,6 @@ from rest_framework.viewsets import ViewSet
 
 from frame_consumer.services.subscriber import SubscriberService
 from .serializer import SubscriptionSerializer
-from drf_yasg.utils import swagger_auto_schema
 
 
 class SubscriberAPI(ViewSet):
