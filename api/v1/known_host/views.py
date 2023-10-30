@@ -16,4 +16,4 @@ class KnownHostRetrieveUpdateDestroyAPI(RetrieveUpdateDestroyAPIView):
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
-        KnownHost.objects.filter(id=self.kwargs.get("pk", None))
+        return KnownHost.objects.filter(id=self.kwargs.get("pk", None))

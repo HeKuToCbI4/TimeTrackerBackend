@@ -16,4 +16,4 @@ class ProcessWindowRetrieveUpdateDestroyAPI(RetrieveUpdateDestroyAPIView):
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
-        ProcessWindow.objects.filter(id=self.kwargs.get("pk", None))
+        return ProcessWindow.objects.filter(id=self.kwargs.get("pk", None))

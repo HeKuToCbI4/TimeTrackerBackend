@@ -25,6 +25,7 @@ class ProcessExecutable(models.Model):
     )
 
     class Meta(object):
+        unique_together = ("executable_name", "executable_path")
         constraints = [
             models.UniqueConstraint(
                 fields=["executable_name", "executable_path"],
@@ -59,6 +60,7 @@ class KnownHost(models.Model):
     auto_start_monitor = models.BooleanField(default=False)
 
     class Meta(object):
+        unique_together = ("host", "port")
         constraints = [
             models.UniqueConstraint(
                 fields=["host", "port"], name="Host|Port unique check."

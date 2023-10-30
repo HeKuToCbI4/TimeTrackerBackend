@@ -16,4 +16,4 @@ class ProcessCategoryRetrieveUpdateDestroyAPI(RetrieveUpdateDestroyAPIView):
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
-        ProcessCategory.objects.filter(id=self.kwargs.get("pk", None))
+        return ProcessCategory.objects.filter(id=self.kwargs.get("pk", None))
