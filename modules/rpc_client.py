@@ -28,10 +28,9 @@ class ProcessWindowData(object):
 
 
 class RPCClientService(object):
-    def __init__(self, remote_host: KnownHost, consumer_id):
+    def __init__(self, remote_host: KnownHost):
         self.subscription_thread: threading.Thread | None = None
         self.remote_host = remote_host
-        self.consumer_id = consumer_id
         self.channel: grpc.Channel | None = None
         self.service_stub: frame_info_service_grpc.FrameInfoServiceStub | None = None
         self.stop_requested = threading.Event()
@@ -40,7 +39,7 @@ class RPCClientService(object):
         # we need to create channel
         if self.channel is None:
             self.channel = grpc.insecure_channel(
-                f"{self.remote_host.host}:{self.remote_host.port}"
+                f"{self.remote_host.address}:{self.remote_host.port}"
             )
 
     def create_stub(self):
@@ -53,7 +52,9 @@ class RPCClientService(object):
     def _prepare_subscription_request(
         self,
     ) -> frame_info_service.StreamSubscribeRequest:
-        return frame_info_service.StreamSubscribeRequest(consumer_id=self.consumer_id)
+        return frame_info_service.StreamSubscribeRequest(
+            consumer_id=self.remote_host.consumer_id
+        )
 
     def _update_remote_host_state(self, is_monitored: bool, status=""):
         # update state to "monitored"
@@ -109,6 +110,7 @@ class RPCClientService(object):
         ) = ProcessExecutable.objects.get_or_create(
             executable_name=process_executable,
             executable_path=process_path,
+            host=self.remote_host,
         )
         if created:
             print(f"created new process executable entry: {process_executable_object}")
@@ -120,14 +122,21 @@ class RPCClientService(object):
             process_data.process_executable, process_data.process_path
         )
         # Process window we always create from scratch.
-        process_window_object = ProcessWindow.objects.create(
+        process_window_object, created = ProcessWindow.objects.get_or_create(
+            defaults={"utc_to": datetime(1970, 1, 1, tzinfo=timezone.utc)},
             process_window_title=process_data.window_title,
             executable=process_executable_object,
             utc_from=datetime.fromtimestamp(
                 process_data.utc_from / 1000, tz=timezone.utc
             ),
-            utc_to=datetime.fromtimestamp(process_data.utc_to / 1000, tz=timezone.utc),
         )
+        if created:
+            print(f"Created new {process_window_object}")
+        process_window_object.utc_to = datetime.fromtimestamp(
+            process_data.utc_to / 1000, tz=timezone.utc
+        )
+
+        process_window_object.save()
         print(f"{process_window_object=}")
 
     def _process_incoming_frames(self):
@@ -137,6 +146,7 @@ class RPCClientService(object):
         process_info: ProcessExecutable
         window_info: ProcessWindow
         data_to_write: ProcessWindowData | None = None
+        self._update_remote_host_state(is_monitored=True, status="Receiving frames")
         try:
             for incoming_frame in self.service_stub.Subscribe(subscribe_request):
                 print(incoming_frame.SerializeToString())
@@ -155,22 +165,18 @@ class RPCClientService(object):
                     data_to_write = None
                     continue
                 # Now we have process executable, binary, window and timestamp of snapshot + prev frame data.
-                # If process binary and window titles match -> update data to write,
-                # and continue, else write to db, create new data.
-                # If window was not switched.
-                if (
-                    incoming_frame.window_title == data_to_write.window_title
-                    and not self.stop_requested.is_set()
-                ):
-                    data_to_write.last_frame_id = incoming_frame.id
-                    continue
+                # If process binary and window titles match -> update data adn write,
+                data_to_write.last_frame_id = incoming_frame.id
                 # We're in else section. We need to grab data from DB and write it.
                 # Get process object to link against new frame.
                 data_to_write.utc_to = incoming_frame.utc_timestamp
                 self._write_data_to_db(data_to_write)
-                # Update data to write for further actions.
-                data_to_write = self._initialize_data_to_write(incoming_frame)
-
+                # Update data to write for further actions in case window switched.
+                if (
+                    incoming_frame.window_title != data_to_write.window_title
+                    and not self.stop_requested.is_set()
+                ):
+                    data_to_write = self._initialize_data_to_write(incoming_frame)
                 # Check for exit condition
                 if self.stop_requested.is_set():
                     self._unsubscribe()
@@ -179,7 +185,9 @@ class RPCClientService(object):
             self._update_remote_host_state(
                 is_monitored=False, status=f"Not active due to {e}"
             )
-            print(f"Exception during processing frames for {self.remote_host}, {e}")
+            print(
+                f"Exception during processing frames for {self.remote_host.address}:{self.remote_host.port}, {e}"
+            )
             raise
 
     # TODO: add exception handling.
@@ -213,7 +221,7 @@ class RPCClientService(object):
         try:
             self.subscription_thread = threading.Thread(
                 target=self._subscription_thread,
-                name=f"subscription thread client {self.consumer_id}",
+                name=f"subscription thread client {self.remote_host.address}|{self.remote_host.port}",
                 daemon=True,
             )
             print(f"{self} created {self.subscription_thread}")
@@ -225,7 +233,7 @@ class RPCClientService(object):
 
     def stop_monitoring(self) -> bool:
         try:
-            print(f"Stop requested for {self.consumer_id}")
+            print(f"Stop requested for {self.remote_host}")
             self.stop_requested.set()
             self.subscription_thread.join(timeout=30)
             return True
@@ -234,7 +242,7 @@ class RPCClientService(object):
 
     def _unsubscribe(self):
         unsubscribe_req = frame_info_service.StreamUnsubscribeRequest(
-            consumer_id=self.consumer_id
+            consumer_id=self.remote_host.consumer_id
         )
         self.service_stub.Unsubscribe(unsubscribe_req)
         self._update_remote_host_state(
@@ -242,4 +250,7 @@ class RPCClientService(object):
         )
 
     def __str__(self):
-        return f"{self.remote_host} consumer {self.consumer_id}"
+        return (
+            f"{self.remote_host.address}:{self.remote_host.port} RPC consumer with "
+            f"client_id {self.remote_host.consumer_id}"
+        )
