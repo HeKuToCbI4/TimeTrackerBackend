@@ -9,6 +9,7 @@ from frame_consumer.services.subscriber import SubscriberService
 from .serializer import SubscriptionSerializer, UnsubscriptionSerializer
 
 
+# This piece of crap should be reworked.
 class SubscriberAPI(ViewSet):
     permission_classes = (AllowAny,)
 
@@ -16,7 +17,12 @@ class SubscriberAPI(ViewSet):
         self.service = SubscriberService()
         super().__init__(**kwargs)
 
-    @action(methods=["post"], detail="Subscribe for frame updates of the remote_host")
+    @action(
+        methods=["post"],
+        detail="Subscribe for frame updates of the remote_host",
+        url_path="subscribe",
+        url_name="subscribe",
+    )
     @swagger_auto_schema(request_body=SubscriptionSerializer)
     def subscribe(self, request: Request):
         serializer = SubscriptionSerializer(data=request.data)
@@ -29,7 +35,12 @@ class SubscriberAPI(ViewSet):
             data.get("auto_monitor", None),
         )
 
-    @action(methods=["post"], detail="Unubscribe for frame updates of the remote_host")
+    @action(
+        methods=["post"],
+        detail="Unubscribe for frame updates of the remote_host",
+        url_path="unsubscribe",
+        url_name="unsubscribe",
+    )
     @swagger_auto_schema(request_body=UnsubscriptionSerializer)
     def unsubscribe(self, request: Request):
         serializer = UnsubscriptionSerializer(data=request.data)
@@ -37,8 +48,8 @@ class SubscriberAPI(ViewSet):
         data = serializer.validated_data
         return self.service.unsubscribe(data.get("address"), data.get("port"))
 
-    @action(methods=["get"], detail="get status of all hosts")
     @swagger_auto_schema()
+    @action(methods=["get"], detail="get status of all hosts")
     def status(self, request: Request):
         response_data = {
             "rpc_pool": {

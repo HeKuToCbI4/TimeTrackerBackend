@@ -12,6 +12,16 @@ class ProcessCategory(models.Model):
         return f"{self.category_name}"
 
 
+class ProcessSubCategory(models.Model):
+    # id->category (string)
+    # automatically incremented ID added by default.
+    # SubCategory name (games | office | programming | work etc.
+    subcategory_name = models.CharField(max_length=128, unique=True)
+
+    def __str__(self):
+        return f"{self.subcategory_name}"
+
+
 class KnownHost(models.Model):
     # remote_host
     # port
@@ -74,6 +84,9 @@ class ProcessWindow(models.Model):
     utc_from = models.DateTimeField()
     utc_to = models.DateTimeField()
     executable = models.ForeignKey(ProcessExecutable, on_delete=models.CASCADE)
+    process_subcategory = models.ForeignKey(
+        ProcessSubCategory, on_delete=models.SET_NULL, null=True
+    )
 
     def __str__(self):
         return f"{self.process_window_title} | {self.executable} | {self.utc_from} - {self.utc_to}"

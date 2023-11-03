@@ -1,9 +1,9 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from frame_consumer.models import KnownHost
 from .serializer import KnownHostListCreateSerializer, KnownHostUpdateDeleteSerializer
-from rest_framework.response import Response
 
 
 class KnownHostsListCreateAPI(ListCreateAPIView):

@@ -54,7 +54,3 @@ class SubscriberService(object):
             return response.JsonResponse(
                 {"status_code": 500, "message": "Some shit happened!"}
             )
-
-
-# This is very stupid. But this makes it singleton :D So when view refreshed it's not called once again and retore not happens.
-# SUBSCRIBER_SERVICE = SubscriberService()
