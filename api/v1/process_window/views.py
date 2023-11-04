@@ -45,14 +45,16 @@ class ProcessWindowListFilteredAPI(ListAPIView):
     def get_queryset(self):
         queryset = ProcessWindow.objects.all()
         if self.request.method == "GET":
-            print(self.request.query_params)
-            if utc_from := self.request.query_params.get("utc_from"):
+            request_serializer = FilterQuerySerializer(data=self.request.query_params)
+            request_serializer.is_valid()
+            data = request_serializer.data
+            if utc_from := data.get("utc_from_ts"):
                 from_time_obj = datetime.datetime.fromtimestamp(
                     int(utc_from) / 1000, tz=timezone.utc
                 )
                 print(f"{from_time_obj=}")
                 queryset = queryset.filter(utc_to__gte=from_time_obj)
-            if utc_to := self.request.query_params.get("utc_to"):
+            if utc_to := data.get("utc_to_ts"):
                 to_time_obj = datetime.datetime.fromtimestamp(
                     int(utc_to[0]) / 1000, tz=timezone.utc
                 )

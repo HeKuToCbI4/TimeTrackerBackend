@@ -2,7 +2,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import AllowAny
 
 from frame_consumer.models import ProcessExecutable
-from .serializer import ProcessExecutableSerializer
+from .serializer import ProcessExecutableSerializer, ProcessExecutableUpdateSerializer
 
 
 class ProcessExecutableListCreateAPI(ListCreateAPIView):
@@ -12,7 +12,7 @@ class ProcessExecutableListCreateAPI(ListCreateAPIView):
 
 
 class ProcessExecutableRetrieveUpdateDestroyAPI(RetrieveUpdateDestroyAPIView):
-    serializer_class = ProcessExecutableSerializer
+    serializer_class = ProcessExecutableUpdateSerializer
     permission_classes = (AllowAny,)
 
     def get_queryset(self):

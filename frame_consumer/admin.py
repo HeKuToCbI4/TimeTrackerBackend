@@ -5,6 +5,9 @@ from frame_consumer.models import (
     ProcessExecutable,
     ProcessWindow,
     KnownHost,
+    ProcessCategoryMapping,
+    ProcessSubCategory,
+    WindowCategoryMapping,
 )
 
 
@@ -28,4 +31,19 @@ class ProcessWindowAdmin(admin.ModelAdmin):
 
 @admin.register(KnownHost)
 class KnownHostAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ProcessCategoryMapping)
+class ModelNameAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(WindowCategoryMapping)
+class WindowCategoryMappingAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ProcessSubCategory)
+class ModelNameAdmin(admin.ModelAdmin):
     pass

@@ -22,6 +22,26 @@ class ProcessSubCategory(models.Model):
         return f"{self.subcategory_name}"
 
 
+class ProcessCategoryMapping(models.Model):
+    """
+    Map between process executable name and category. Kind of static one.
+    map clion.exe to development.
+    """
+
+    executable_name = models.CharField(max_length=128, unique=True)
+    category = models.ManyToManyField(ProcessCategory, related_name="executable_names")
+
+
+class WindowCategoryMapping(models.Model):
+    """
+    Map between window title part and subcategory. Kind of static one.
+    for example map youtube to entertainment.
+    """
+
+    pattern = models.CharField(max_length=256, unique=True)
+    category = models.ManyToManyField(ProcessSubCategory, related_name="title_patterns")
+
+
 class KnownHost(models.Model):
     # remote_host
     # port
@@ -59,8 +79,8 @@ class ProcessExecutable(models.Model):
     executable_name = models.CharField(max_length=128, unique=True)
     # full path to executable.
     executable_path = models.CharField(max_length=512)
-    executable_category = models.ForeignKey(
-        ProcessCategory, on_delete=models.SET_NULL, null=True
+    executable_category = models.ManyToManyField(
+        ProcessCategory, related_name="processes"
     )
     host = models.ForeignKey(KnownHost, on_delete=models.CASCADE)
 
@@ -84,8 +104,8 @@ class ProcessWindow(models.Model):
     utc_from = models.DateTimeField()
     utc_to = models.DateTimeField()
     executable = models.ForeignKey(ProcessExecutable, on_delete=models.CASCADE)
-    process_subcategory = models.ForeignKey(
-        ProcessSubCategory, on_delete=models.SET_NULL, null=True
+    process_subcategory = models.ManyToManyField(
+        ProcessSubCategory, related_name="process_windows"
     )
 
     def __str__(self):

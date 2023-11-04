@@ -15,7 +15,6 @@ class KnownHostListCreateSerializer(serializers.ModelSerializer):
 
 
 class KnownHostUpdateDeleteSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = KnownHost
         fields = [
