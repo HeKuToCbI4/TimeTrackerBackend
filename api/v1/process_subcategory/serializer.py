@@ -6,4 +6,4 @@ from frame_consumer.models import ProcessSubCategory
 class ProcessSubCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProcessSubCategory
-        fields = '__all__'
+        fields = "__all__"

@@ -10,6 +10,7 @@ class ProcessExecutableSerializer(serializers.ModelSerializer):
         model = ProcessExecutable
         fields = "__all__"
 
+
 class ProcessExecutableUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProcessExecutable

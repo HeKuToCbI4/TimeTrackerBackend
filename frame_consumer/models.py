@@ -50,7 +50,7 @@ class KnownHost(models.Model):
     port = models.PositiveSmallIntegerField()
     consumer_id = models.CharField(max_length=64)
     is_monitored = models.BooleanField(default=False)
-    status = models.CharField(max_length=128, default="Unknown")
+    status = models.CharField(max_length=128, default="Unknown", null=True)
     auto_start_monitor = models.BooleanField(default=False)
 
     class Meta(object):
