@@ -7,7 +7,12 @@ from datetime import datetime
 import grpc
 from django.utils import timezone
 
-from frame_consumer.models import ProcessWindow, ProcessExecutable, KnownHost
+from frame_consumer.models import (
+    ProcessWindow,
+    ProcessExecutable,
+    KnownHost,
+    ProcessWindowSnapshot,
+)
 from proto import FrameInfoService_pb2 as frame_info_service
 from proto import FrameInfoService_pb2_grpc as frame_info_service_grpc
 from proto import FrameInfo_pb2 as frame_info
@@ -114,30 +119,39 @@ class RPCClientService(object):
         )
         if created:
             print(f"created new process executable entry: {process_executable_object}")
-        print(f"{process_executable_object=}")
         return process_executable_object
 
     def _write_data_to_db(self, process_data: ProcessWindowData):
         process_executable_object = self._get_process_executable_object(
             process_data.process_executable, process_data.process_path
         )
-        # Process window we always create from scratch.
+        # Try to find process window object
         process_window_object, created = ProcessWindow.objects.get_or_create(
-            defaults={"utc_to": datetime(1970, 1, 1, tzinfo=timezone.utc)},
             process_window_title=process_data.window_title,
             executable=process_executable_object,
+        )
+        if created:
+            print(f"Created new {str(process_window_object).encode()}")
+        # Store snapshot data.
+        (
+            process_window_snapshot_object,
+            created,
+        ) = ProcessWindowSnapshot.objects.get_or_create(
+            defaults={"utc_to": datetime(1970, 1, 1, tzinfo=timezone.utc)},
             utc_from=datetime.fromtimestamp(
                 process_data.utc_from / 1000, tz=timezone.utc
             ),
+            process_window=process_window_object,
         )
         if created:
-            print(f"Created new {process_window_object}")
-        process_window_object.utc_to = datetime.fromtimestamp(
+            # This is weird. but it's fixing encoding if we want to get rid of some exceptions :D
+            print(f"Created snapshot object {str(process_window_snapshot_object).encode()}")
+
+        process_window_snapshot_object.utc_to = datetime.fromtimestamp(
             process_data.utc_to / 1000, tz=timezone.utc
         )
-
-        process_window_object.save()
-        print(f"{process_window_object=}")
+        process_window_snapshot_object.save()
+        print(f"Updated {str(process_window_snapshot_object).encode()}")
 
     def _process_incoming_frames(self):
         # Receive and write data?

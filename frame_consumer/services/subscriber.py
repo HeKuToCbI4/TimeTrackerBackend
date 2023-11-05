@@ -8,11 +8,11 @@ class SubscriberService(object):
     def __init__(self):
         self.rpc_pool = RPCClientPool()
 
-    def subscribe(self, host, port, consumer_id, auto_monitor) -> response.JsonResponse:
+    def subscribe(self, address, port, consumer_id, auto_monitor) -> response.JsonResponse:
         print(self.rpc_pool)
         # This thing should handle thread creation.
         # This thing should also create remote_host remote_host model obj.
-        remote_host, created = KnownHost.objects.get_or_create(host=host, port=port)
+        remote_host, created = KnownHost.objects.get_or_create(address=address, port=port)
         if created:
             if auto_monitor is not None:
                 # bump value if it is passed and the object is new.

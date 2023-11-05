@@ -8,6 +8,7 @@ from frame_consumer.models import (
     ProcessCategoryMapping,
     ProcessSubCategory,
     WindowCategoryMapping,
+    ProcessWindowSnapshot,
 )
 
 
@@ -46,4 +47,9 @@ class WindowCategoryMappingAdmin(admin.ModelAdmin):
 
 @admin.register(ProcessSubCategory)
 class ModelNameAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ProcessWindowSnapshot)
+class ProcessWindowSnapshotAdmin(admin.ModelAdmin):
     pass

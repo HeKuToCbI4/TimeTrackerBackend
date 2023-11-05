@@ -50,7 +50,7 @@ class KnownHost(models.Model):
     port = models.PositiveSmallIntegerField()
     consumer_id = models.CharField(max_length=64)
     is_monitored = models.BooleanField(default=False)
-    status = models.CharField(max_length=128, default="Unknown", null=True)
+    status = models.CharField(max_length=128, default="Unknown", blank=True)
     auto_start_monitor = models.BooleanField(default=False)
 
     class Meta(object):
@@ -97,16 +97,36 @@ class ProcessExecutable(models.Model):
         return f"{self.executable_name} | {self.executable_category}"
 
 
+# Dispatch this thing.
+# Make this separate window - window data. The window itself should refer executable, have title and subcategory.
+# Save storage :)
 class ProcessWindow(models.Model):
     # executable id | name | utc since | utc to
     id = models.BigAutoField(primary_key=True)
     process_window_title = models.CharField(max_length=512, unique=False)
-    utc_from = models.DateTimeField()
-    utc_to = models.DateTimeField()
     executable = models.ForeignKey(ProcessExecutable, on_delete=models.CASCADE)
     process_subcategory = models.ManyToManyField(
         ProcessSubCategory, related_name="process_windows"
     )
 
+    class Meta(object):
+        unique_together = ("process_window_title", "executable")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["process_window_title", "executable"],
+                name="window_title-process unique constraint",
+            )
+        ]
+
     def __str__(self):
-        return f"{self.process_window_title} | {self.executable} | {self.utc_from} - {self.utc_to}"
+        return f"{self.process_window_title} | {self.executable}"
+
+
+class ProcessWindowSnapshot(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    utc_from = models.DateTimeField()
+    utc_to = models.DateTimeField()
+    process_window = models.ForeignKey(ProcessWindow, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Snapshot of {self.process_window} {self.utc_from} {self.utc_to}"

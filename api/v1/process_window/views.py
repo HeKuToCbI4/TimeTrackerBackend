@@ -11,7 +11,7 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny
 
 from frame_consumer.models import ProcessWindow
-from .serializer import ProcessWindowSerializer, FilterQuerySerializer
+from .serializer import ProcessWindowSerializer
 
 
 class ProcessWindowListCreateAPI(ListCreateAPIView):
@@ -26,38 +26,3 @@ class ProcessWindowRetrieveUpdateDestroyAPI(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return ProcessWindow.objects.filter(id=self.kwargs.get("pk", None))
-
-
-class ProcessWindowListFilteredAPI(ListAPIView):
-    serializer_class = ProcessWindowSerializer
-    permission_classes = (AllowAny,)
-
-    @swagger_auto_schema(query_serializer=FilterQuerySerializer())
-    @action(
-        methods=["get"],
-        detail="List filtered items based on timestamps from-to",
-        url_path="/filter",
-        url_name="list_filtered",
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_queryset(self):
-        queryset = ProcessWindow.objects.all()
-        if self.request.method == "GET":
-            request_serializer = FilterQuerySerializer(data=self.request.query_params)
-            request_serializer.is_valid()
-            data = request_serializer.data
-            if utc_from := data.get("utc_from_ts"):
-                from_time_obj = datetime.datetime.fromtimestamp(
-                    int(utc_from) / 1000, tz=timezone.utc
-                )
-                print(f"{from_time_obj=}")
-                queryset = queryset.filter(utc_to__gte=from_time_obj)
-            if utc_to := data.get("utc_to_ts"):
-                to_time_obj = datetime.datetime.fromtimestamp(
-                    int(utc_to[0]) / 1000, tz=timezone.utc
-                )
-                print(to_time_obj)
-                queryset = queryset.filter(utc_to__lte=to_time_obj)
-        return queryset
