@@ -12,11 +12,12 @@ from frame_consumer.models import (
     ProcessExecutable,
     KnownHost,
     ProcessWindowSnapshot,
+    ProcessCategoryMapping,
 )
 from proto import FrameInfoService_pb2 as frame_info_service
 from proto import FrameInfoService_pb2_grpc as frame_info_service_grpc
 from proto import FrameInfo_pb2 as frame_info
-
+from modules.title_preprocessor import WindowTitlePreprocessor
 
 class RPCClientServiceException(Exception):
     pass
@@ -69,9 +70,9 @@ class RPCClientService(object):
 
     def _extract_data_from_frame(self, frame: frame_info.TimeFrameInfo) -> tuple:
         cur_frame_id = frame.id
-        process_path = frame.process_executable_path
+        process_path = frame.process_executable_path.strip()
         current_timestamp = frame.utc_timestamp
-        process_window = frame.window_title
+        process_window = frame.window_title.strip()
         if process_path:
             process_binary = process_path.split(os.sep)[-1]
             print(f"{process_path=} {process_binary=}")
@@ -98,7 +99,7 @@ class RPCClientService(object):
         ) = self._extract_data_from_frame(frame)
         return ProcessWindowData(
             last_frame_id=cur_frame_id,
-            window_title=process_window,
+            window_title=WindowTitlePreprocessor.process_title(process_binary, process_window),
             utc_from=current_timestamp,
             utc_to=None,
             process_path=process_path,
@@ -117,6 +118,13 @@ class RPCClientService(object):
             executable_path=process_path,
             host=self.remote_host,
         )
+        process_categories = ProcessCategoryMapping.objects.filter(
+            executable_name__iexact=process_executable
+        )
+        if process_categories:
+            for category in process_categories[0].categories.all():
+                process_executable_object.executable_categories.add(category)
+            process_executable_object.save()
         if created:
             print(f"created new process executable entry: {process_executable_object}")
         return process_executable_object
@@ -145,7 +153,9 @@ class RPCClientService(object):
         )
         if created:
             # This is weird. but it's fixing encoding if we want to get rid of some exceptions :D
-            print(f"Created snapshot object {str(process_window_snapshot_object).encode()}")
+            print(
+                f"Created snapshot object {str(process_window_snapshot_object).encode()}"
+            )
 
         process_window_snapshot_object.utc_to = datetime.fromtimestamp(
             process_data.utc_to / 1000, tz=timezone.utc

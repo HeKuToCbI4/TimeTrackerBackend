@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 class ProcessCategory(models.Model):
-    # id->category (string)
+    # id->categories (string)
     # automatically incremented ID added by default.
     # Category name (games | office | programming | work etc.
     category_name = models.CharField(max_length=128, unique=True)
@@ -13,7 +13,7 @@ class ProcessCategory(models.Model):
 
 
 class ProcessSubCategory(models.Model):
-    # id->category (string)
+    # id->categories (string)
     # automatically incremented ID added by default.
     # SubCategory name (games | office | programming | work etc.
     subcategory_name = models.CharField(max_length=128, unique=True)
@@ -24,15 +24,15 @@ class ProcessSubCategory(models.Model):
 
 class ProcessCategoryMapping(models.Model):
     """
-    Map between process executable name and category. Kind of static one.
+    Map between process executable name and categories. Kind of static one.
     map clion.exe to development.
     """
 
     executable_name = models.CharField(max_length=128, unique=True)
-    category = models.ManyToManyField(ProcessCategory, related_name="executable_names")
+    categories = models.ManyToManyField(ProcessCategory, related_name="executable_names")
 
 
-class WindowCategoryMapping(models.Model):
+class WindowSubCategoryMapping(models.Model):
     """
     Map between window title part and subcategory. Kind of static one.
     for example map youtube to entertainment.
@@ -72,29 +72,29 @@ class KnownHost(models.Model):
 
 
 class ProcessExecutable(models.Model):
-    # id | executable name | category | path to executable
+    # id | executable name | categories | path to executable
     # PK, id just in case we need to store LOTS of executables.
     id = models.BigAutoField(primary_key=True)
     # short version, something like wow.exe or clion.exe
     executable_name = models.CharField(max_length=128, unique=True)
     # full path to executable.
     executable_path = models.CharField(max_length=512)
-    executable_category = models.ManyToManyField(
+    executable_categories = models.ManyToManyField(
         ProcessCategory, related_name="processes"
     )
     host = models.ForeignKey(KnownHost, on_delete=models.CASCADE)
 
-    class Meta(object):
-        unique_together = ("executable_name", "executable_path")
-        constraints = [
-            models.UniqueConstraint(
-                fields=["executable_name", "executable_path"],
-                name="executable name|path unique check.",
-            )
-        ]
+    # class Meta(object):
+    #     unique_together = ("executable_name", "executable_path")
+    #     constraints = [
+    #         models.UniqueConstraint(
+    #             fields=["executable_name", "executable_path"],
+    #             name="executable name|path unique check.",
+    #         )
+    #     ]
 
     def __str__(self):
-        return f"{self.executable_name} | {self.executable_category}"
+        return f"{self.executable_name} | {self.executable_categories.all()}"
 
 
 # Dispatch this thing.

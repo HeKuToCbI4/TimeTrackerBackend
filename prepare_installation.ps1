@@ -18,4 +18,5 @@ echo "migrate"
 .\manage.py migrate
 
 echo "loading data"
-.\manage.py loaddata frame_consumer/categories.yaml
+.\manage.py loaddata frame_consumer/processcategories.yaml
+.\manage.py loaddata frame_consumer/processcategories_mapping.yaml

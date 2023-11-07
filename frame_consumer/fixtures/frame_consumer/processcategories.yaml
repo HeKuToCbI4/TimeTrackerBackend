@@ -1,0 +1,28 @@
+- model: frame_consumer.processcategory
+  pk: 1
+  fields:
+    category_name: Games
+- model: frame_consumer.processcategory
+  pk: 2
+  fields:
+    category_name: Messengers
+- model: frame_consumer.processcategory
+  pk: 3
+  fields:
+    category_name: Browsers
+- model: frame_consumer.processcategory
+  pk: 4
+  fields:
+    category_name: Software
+- model: frame_consumer.processcategory
+  pk: 5
+  fields:
+    category_name: Programming
+- model: frame_consumer.processcategory
+  pk: 6
+  fields:
+    category_name: Streaming services
+- model: frame_consumer.processcategory
+  pk: 7
+  fields:
+    category_name: Mail

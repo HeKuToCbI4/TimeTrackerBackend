@@ -14,4 +14,4 @@ class ProcessExecutableSerializer(serializers.ModelSerializer):
 class ProcessExecutableUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProcessExecutable
-        fields = ["executable_category"]
+        fields = ["executable_categories"]

@@ -7,7 +7,7 @@ from frame_consumer.models import (
     KnownHost,
     ProcessCategoryMapping,
     ProcessSubCategory,
-    WindowCategoryMapping,
+    WindowSubCategoryMapping,
     ProcessWindowSnapshot,
 )
 
@@ -40,7 +40,7 @@ class ModelNameAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(WindowCategoryMapping)
+@admin.register(WindowSubCategoryMapping)
 class WindowCategoryMappingAdmin(admin.ModelAdmin):
     pass
 

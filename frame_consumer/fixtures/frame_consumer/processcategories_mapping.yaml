@@ -1,0 +1,60 @@
+- model: frame_consumer.processcategorymapping
+  pk: 1
+  fields:
+    executable_name: brave.exe
+    categories:
+    - 3
+- model: frame_consumer.processcategorymapping
+  pk: 2
+  fields:
+    executable_name: pycharm64.exe
+    categories:
+    - 5
+- model: frame_consumer.processcategorymapping
+  pk: 3
+  fields:
+    executable_name: Telegram.exe
+    categories:
+    - 2
+- model: frame_consumer.processcategorymapping
+  pk: 4
+  fields:
+    executable_name: OUTLOOK.EXE
+    categories:
+    - 7
+- model: frame_consumer.processcategorymapping
+  pk: 5
+  fields:
+    executable_name: steamwebhelper.exe
+    categories:
+    - 1
+- model: frame_consumer.processcategorymapping
+  pk: 6
+  fields:
+    executable_name: r5apex.exe
+    categories:
+    - 1
+- model: frame_consumer.processcategorymapping
+  pk: 7
+  fields:
+    executable_name: Discord.exe
+    categories:
+    - 2
+- model: frame_consumer.processcategorymapping
+  pk: 8
+  fields:
+    executable_name: Spotify.exe
+    categories:
+    - 6
+- model: frame_consumer.processcategorymapping
+  pk: 9
+  fields:
+    executable_name: LeagueClientUx.exe
+    categories:
+    - 1
+- model: frame_consumer.processcategorymapping
+  pk: 10
+  fields:
+    executable_name: League of Legends.exe
+    categories:
+    - 1
