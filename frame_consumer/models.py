@@ -76,7 +76,7 @@ class ProcessExecutable(models.Model):
     # PK, id just in case we need to store LOTS of executables.
     id = models.BigAutoField(primary_key=True)
     # short version, something like wow.exe or clion.exe
-    executable_name = models.CharField(max_length=128, unique=True)
+    executable_name = models.CharField(max_length=128)
     # full path to executable.
     executable_path = models.CharField(max_length=512)
     executable_categories = models.ManyToManyField(
@@ -84,14 +84,14 @@ class ProcessExecutable(models.Model):
     )
     host = models.ForeignKey(KnownHost, on_delete=models.CASCADE)
 
-    # class Meta(object):
-    #     unique_together = ("executable_name", "executable_path")
-    #     constraints = [
-    #         models.UniqueConstraint(
-    #             fields=["executable_name", "executable_path"],
-    #             name="executable name|path unique check.",
-    #         )
-    #     ]
+    class Meta(object):
+        unique_together = ("executable_name", "executable_path")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["executable_name", "executable_path"],
+                name="executable name|path unique check.",
+            )
+        ]
 
     def __str__(self):
         return f"{self.executable_name} | {self.executable_categories.all()}"

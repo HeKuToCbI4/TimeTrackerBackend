@@ -5,4 +5,5 @@ from . import views
 urlpatterns = [
     path("", views.ProcessExecutableListCreateAPI.as_view()),
     path("<int:pk>", views.ProcessExecutableRetrieveUpdateDestroyAPI.as_view()),
+    path("aggregate", views.PerProcessUtilizationAPI.as_view())
 ]

@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-ji-bun%#66(869rzszrj&yr7m!ymqi@aqy5sngr0i_x7il$5vz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "rest_framework_swagger",  # Swagger
     "rest_framework",  # Django rest framework
     "drf_yasg",  # Yet Another Swagger generator
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -51,6 +52,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = "TimeTrackerBackend.urls"
@@ -137,3 +140,9 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ]
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "http://localhost:8080",
+    "http://127.0.0.1:9000"
+]

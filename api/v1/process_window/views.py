@@ -56,7 +56,7 @@ class PerProcessWindowUtilizationAPI(ListAPIView):
             request_serializer.is_valid()
             data = request_serializer.data
             utc_from = data.get("from_utc")
-            utc_to = data.get("to_utc")
+            utc_to = data.get("to_utc") or datetime.datetime.now(tz=timezone.utc)
             queryset = queryset.filter(
                 processwindowsnapshot__utc_from__gte=utc_from,
                 processwindowsnapshot__utc_to__lte=utc_to,

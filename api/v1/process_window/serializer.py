@@ -28,7 +28,7 @@ class PerProcessWindowUtilizationRequestSerializer(serializers.Serializer):
     to_utc = serializers.DateTimeField(
         default_timezone=timezone.utc,
         required=False,
-        default=datetime.datetime.now(tz=timezone.utc),
+        default=None,
     )
 
 
@@ -41,7 +41,7 @@ class PerProcessWindowUtilizationSerializer(serializers.ModelSerializer):
     )
     duration = serializers.DurationField()
 
-    def get_total_utilization(self, obj):
+    def get_duration(self, obj):
         try:
             return obj.duration
         except:
