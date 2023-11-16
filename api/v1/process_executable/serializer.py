@@ -31,11 +31,12 @@ class PerProcessUtilizationRequestSerializer(serializers.Serializer):
         required=False,
         default=None,
     )
+    host = serializers.CharField(required=False, max_length=128)
 
 
 class PerProcessUtilizationSerializer(serializers.ModelSerializer):
     duration = serializers.IntegerField()
-    host = serializers.CharField(source='host.address')
+    host = serializers.CharField(source="host.address")
 
     def get_duration(self, obj):
         try:
@@ -45,9 +46,4 @@ class PerProcessUtilizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessExecutable
-        fields = [
-            "executable_path",
-            "executable_name",
-            "duration",
-            "host"
-        ]
+        fields = ["executable_path", "executable_name", "duration", "host"]

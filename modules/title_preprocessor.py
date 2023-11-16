@@ -13,6 +13,8 @@ class WindowTitlePreprocessor(object):
 
     @staticmethod
     def process_title(executable: str, title: str) -> str:
+        if executable is None:
+            return title
         if executable.lower() == "telegram.exe":
             found = re.findall(
                 r"(\(\d+\))?\s?([\w\s,|\\/()\[\].!@#$%^&*]+)(.\s\(\d+\))?", title

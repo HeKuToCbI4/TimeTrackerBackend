@@ -14,11 +14,10 @@ from .serializer import (
     PerProcessUtilizationSerializer,
     PerProcessUtilizationRequestSerializer,
 )
-from django.db.models import Sum, F, ExpressionWrapper, fields
+from django.db.models import Sum, F, ExpressionWrapper, fields, Q
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
 from django.utils import timezone
-
 
 class ProcessExecutableListCreateAPI(ListCreateAPIView):
     queryset = ProcessExecutable.objects.all()
@@ -56,9 +55,16 @@ class PerProcessUtilizationAPI(ListAPIView):
             data = request_serializer.data
             utc_from = data.get("from_utc")
             utc_to = data.get("to_utc") or datetime.datetime.now(tz=timezone.utc)
+            host = data.get("host")
+            filters = None
+            if utc_from is not None:
+                filters = Q(processwindow__processwindowsnapshot__utc_from__gte=utc_from)
+            if utc_to is not None:
+                filters &= Q(processwindow__processwindowsnapshot__utc_to__lte=utc_to)
+            if host is not None:
+                filters &= Q(host__address__exact=host)
             queryset = queryset.filter(
-                processwindow__processwindowsnapshot__utc_from__gte=utc_from,
-                processwindow__processwindowsnapshot__utc_to__lte=utc_to,
+                filters
             )
             # This is to wrap.
             duration_agg = ExpressionWrapper(

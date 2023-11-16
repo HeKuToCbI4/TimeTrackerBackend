@@ -16,7 +16,8 @@ from .serializer import (
     PerProcessWindowUtilizationRequestSerializer,
     PerProcessWindowUtilizationSerializer,
 )
-from django.db.models import Sum, F, ExpressionWrapper, fields
+from django.db.models import Sum, F, ExpressionWrapper, fields, Q
+
 
 
 class ProcessWindowListCreateAPI(ListCreateAPIView):
@@ -57,10 +58,17 @@ class PerProcessWindowUtilizationAPI(ListAPIView):
             data = request_serializer.data
             utc_from = data.get("from_utc")
             utc_to = data.get("to_utc") or datetime.datetime.now(tz=timezone.utc)
-            queryset = queryset.filter(
-                processwindowsnapshot__utc_from__gte=utc_from,
-                processwindowsnapshot__utc_to__lte=utc_to,
-            )
+            host = data.get("host")
+            filters = None
+            if utc_from is not None:
+                filters = Q(
+                    processwindowsnapshot__utc_from__gte=utc_from
+                )
+            if utc_to is not None:
+                filters &= Q(processwindowsnapshot__utc_to__lte=utc_to)
+            if host is not None:
+                filters &= Q(executable__host__address__exact=host)
+            queryset = queryset.filter(filters)
             # This is to wrap.
             duration_agg = ExpressionWrapper(
                 F("processwindowsnapshot__utc_to")

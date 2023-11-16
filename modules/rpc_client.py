@@ -77,8 +77,7 @@ class RPCClientService(object):
             process_binary = process_path.split(os.sep)[-1]
             print(f"{process_path=} {process_binary=}")
         else:
-            print("process path is none!")
-            process_binary = None
+            process_binary = 'Unknown'
         return (
             cur_frame_id,
             process_binary,

@@ -30,6 +30,7 @@ class PerProcessWindowUtilizationRequestSerializer(serializers.Serializer):
         required=False,
         default=None,
     )
+    host = serializers.CharField(required=False, max_length=128)
 
 
 class PerProcessWindowUtilizationSerializer(serializers.ModelSerializer):
