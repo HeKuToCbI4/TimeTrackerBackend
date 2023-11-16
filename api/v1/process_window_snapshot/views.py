@@ -52,12 +52,10 @@ class ProcessWindowSnapshotListFilteredAPI(ListAPIView):
                 from_time_obj = datetime.datetime.fromtimestamp(
                     int(utc_from) / 1000, tz=timezone.utc
                 )
-                print(f"{from_time_obj=}")
                 queryset = queryset.filter(utc_to__gte=from_time_obj)
             if utc_to := data.get("utc_to_ts"):
                 to_time_obj = datetime.datetime.fromtimestamp(
                     int(utc_to) / 1000, tz=timezone.utc
                 )
-                print(to_time_obj)
                 queryset = queryset.filter(utc_to__lte=to_time_obj)
         return queryset

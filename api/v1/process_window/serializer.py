@@ -39,6 +39,7 @@ class PerProcessWindowUtilizationSerializer(serializers.ModelSerializer):
     executable_name = serializers.CharField(
         source="executable.executable_name", read_only=True
     )
+    host = serializers.CharField(source='executable.host.address', read_only=True)
     duration = serializers.DurationField()
 
     def get_duration(self, obj):
@@ -54,4 +55,5 @@ class PerProcessWindowUtilizationSerializer(serializers.ModelSerializer):
             "executable_name",
             "process_window_title",
             "duration",
+            "host",
         ]
